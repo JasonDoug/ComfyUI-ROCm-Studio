@@ -9,7 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
             navButtons.forEach(b => b.classList.remove('active'));
             tabContents.forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
-            document.getElementById(targetTab).classList.add('active');
+            const targetEl = document.getElementById(targetTab);
+            if (targetEl) targetEl.classList.add('active');
+            if (targetTab === 'tab-gallery' && typeof loadGallery === 'function') {
+                loadGallery();
+            }
         });
     });
 
@@ -1073,7 +1077,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                galleryGrid.innerHTML = data.images.map(img => `
+                galleryGrid.innerHTML = data.images.map(img => {
+                    const timeStr = img.mtime_str ? (img.mtime_str.split(' ')[1] || img.mtime_str) : '';
+                    return `
                     <div class="gallery-card" style="background: rgba(30,30,40,0.7); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s;">
                         <div style="aspect-ratio: 1; overflow: hidden; background: #000; cursor: pointer; position: relative;" class="gallery-img-container" data-url="${img.url}" data-filename="${img.filename}" data-subfolder="${img.subfolder}">
                             <img src="${img.url}" alt="${img.filename}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
@@ -1083,7 +1089,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ${img.filename}
                             </div>
                             <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
-                                <span><i class="fa-regular fa-clock"></i> ${img.mtime_str.split(' ')[1]}</span>
+                                <span><i class="fa-regular fa-clock"></i> ${timeStr}</span>
                                 <span><i class="fa-solid fa-hard-drive"></i> ${img.size_mb} MB</span>
                             </div>
                             <div style="display: flex; gap: 6px; margin-top: 6px;">
@@ -1092,7 +1098,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
             }
         } catch (e) {
             console.error("Gallery fetch error:", e);
