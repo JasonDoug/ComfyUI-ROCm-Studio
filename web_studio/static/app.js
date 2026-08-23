@@ -912,43 +912,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Inline Live Console Box Poller
     let inlineLogTarget = 'comfyui';
-    const inlineOutputs = document.querySelectorAll('.inline-log-output');
-    const toggleBtns = document.querySelectorAll('.toggle-log-src-btn');
-    const refreshBtns = document.querySelectorAll('.refresh-inline-log-btn');
 
     async function pollInlineLogs() {
-        if (!inlineOutputs.length) return;
+        const outputs = document.querySelectorAll('.inline-log-output');
+        if (!outputs || !outputs.length) return;
         try {
             const res = await fetch(`/api/logs/${inlineLogTarget}?lines=35`);
             const data = await res.json();
             if (data.status === 'success' && data.lines) {
-                const text = data.lines.join('\n') || '[No recent log entries]';
-                inlineOutputs.forEach(box => {
-                    const isAtBottom = box.scrollHeight - box.clientHeight <= box.scrollTop + 30;
+                const cleanLines = data.lines.map(l => l.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, ''));
+                const text = cleanLines.join('\n') || '[No recent log entries]';
+                outputs.forEach(box => {
                     box.textContent = text;
-                    if (isAtBottom) {
-                        box.scrollTop = box.scrollHeight;
-                    }
+                    box.scrollTop = box.scrollHeight;
                 });
+            } else if (data.message) {
+                outputs.forEach(box => box.textContent = `[Log Notice: ${data.message}]`);
             }
         } catch (e) {
-            // silent retry
+            console.error("Inline log fetch error:", e);
         }
     }
 
-    toggleBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
+    document.addEventListener('click', (e) => {
+        const toggleBtn = e.target.closest('.toggle-log-src-btn');
+        if (toggleBtn) {
             inlineLogTarget = (inlineLogTarget === 'comfyui') ? 'studio' : 'comfyui';
-            toggleBtns.forEach(b => b.textContent = `Target: ${inlineLogTarget}.log`);
+            document.querySelectorAll('.toggle-log-src-btn').forEach(b => b.textContent = `Target: ${inlineLogTarget}.log`);
             pollInlineLogs();
-        });
+        }
+        const refreshBtn = e.target.closest('.refresh-inline-log-btn');
+        if (refreshBtn) {
+            pollInlineLogs();
+        }
     });
 
-    refreshBtns.forEach(btn => {
-        btn.addEventListener('click', pollInlineLogs);
-    });
-
-    // Start live inline log polling every 2 seconds
+    // Start live inline log polling immediately and every 2 seconds
     pollInlineLogs();
     setInterval(pollInlineLogs, 2000);
 });
