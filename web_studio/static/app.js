@@ -1069,7 +1069,7 @@ function initStudioApp() {
 
     let isGalleryLoading = false;
     window.loadGallery = async function loadGallery() {
-        const grid = document.getElementById('gallery-grid');
+        const grid = document.getElementById('tab-gallery-grid') || document.getElementById('gallery-grid');
         if (!grid || isGalleryLoading) return;
         isGalleryLoading = true;
         try {
