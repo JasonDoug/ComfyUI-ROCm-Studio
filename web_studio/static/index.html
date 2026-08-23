@@ -433,49 +433,6 @@
                 </header>
 
                 <div id="gallery-grid" translate="no" data-spoken-word-ignore="true" data-tts-ignore="true" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 20px; min-height: 200px;"></div>
-
-                <script>
-                    async function inlineFetchGallery() {
-                        const grid = document.getElementById('gallery-grid');
-                        if (!grid) return;
-                        try {
-                            const res = await fetch('/api/gallery?t=' + Date.now());
-                            const data = await res.json();
-                            if (data.status === 'success' && Array.isArray(data.images)) {
-                                if (data.images.length === 0) {
-                                    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#a0aec0;">No generated images found yet.</div>';
-                                    return;
-                                }
-                                grid.innerHTML = data.images.map(img => {
-                                    const timeStr = img.mtime_str ? (img.mtime_str.split(' ')[1] || img.mtime_str) : '';
-                                    return `
-                                    <div class="gallery-card" style="background: rgba(30,30,40,0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; width: 100%;">
-                                        <div style="width: 100%; height: 260px; overflow: hidden; background: #111; cursor: pointer; position: relative;" class="gallery-img-container" data-url="${img.url}" data-filename="${img.filename}" data-subfolder="${img.subfolder}">
-                                            <img src="${img.url}" alt="${img.filename}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                                        </div>
-                                        <div style="padding: 10px; font-size: 11px; display: flex; flex-direction: column; gap: 4px;">
-                                            <div style="font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${img.filename}">${img.filename}</div>
-                                            <div style="display: flex; justify-content: space-between; color: #a0aec0;">
-                                                <span><i class="fa-regular fa-clock"></i> ${timeStr}</span>
-                                                <span><i class="fa-solid fa-hard-drive"></i> ${img.size_mb} MB</span>
-                                            </div>
-                                            <div style="display: flex; gap: 6px; margin-top: 6px;">
-                                                <a href="${img.url}" download="${img.filename}" class="btn btn-secondary" style="flex: 1; padding: 4px; font-size: 11px; text-align: center;"><i class="fa-solid fa-download"></i> Save</a>
-                                                <button class="btn btn-secondary delete-img-btn" data-filename="${img.filename}" data-subfolder="${img.subfolder}" style="padding: 4px 8px; font-size: 11px; background: rgba(239,68,68,0.2); color: #f87171;"><i class="fa-solid fa-trash"></i></button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    `;
-                                }).join('');
-                            }
-                        } catch (e) {
-                            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#f87171;">Failed to load images: ' + e.message + '</div>';
-                        }
-                    }
-                    window.inlineFetchGallery = inlineFetchGallery;
-                    document.addEventListener('DOMContentLoaded', inlineFetchGallery);
-                    setTimeout(inlineFetchGallery, 300);
-                </script>
             </section>
 
             <!-- TAB 5: Model Roadmap -->
@@ -542,6 +499,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=3.0.0"></script>
+    <script src="app.js?v=3.1.0"></script>
 </body>
 </html>
