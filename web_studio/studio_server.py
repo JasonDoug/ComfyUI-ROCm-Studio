@@ -258,13 +258,14 @@ async def generate_image(payload: dict):
             },
             "class_type": "ModelSamplingFlux"
         }
+        t5_clip_name = "t5-v1_1-xxl-encoder-Q4_K_M.gguf" if (os.path.exists("/home/jason/models/TextEncoders/clip/t5-v1_1-xxl-encoder-Q4_K_M.gguf") or os.path.exists("/home/jason/AI-ImageGen/ComfyUI/models/clip/t5-v1_1-xxl-encoder-Q4_K_M.gguf")) else "t5xxl_fp8_e4m3fn.safetensors"
         workflow["4_clip"] = {
             "inputs": {
                 "clip_name1": "clip_l.safetensors",
-                "clip_name2": "t5xxl_fp8_e4m3fn.safetensors",
+                "clip_name2": t5_clip_name,
                 "type": "flux"
             },
-            "class_type": "DualCLIPLoaderGGUF" if ckpt_name.endswith(".gguf") else "DualCLIPLoader"
+            "class_type": "DualCLIPLoaderGGUF" if (ckpt_name.endswith(".gguf") or t5_clip_name.endswith(".gguf")) else "DualCLIPLoader"
         }
         workflow["4_vae"] = {
             "inputs": {"vae_name": "ae.safetensors"},
@@ -306,6 +307,18 @@ async def generate_image(payload: dict):
         },
         "class_type": "CLIPTextEncode"
     }
+    positive_source = ["6", 0]
+
+    # FLUX.1-dev Guidance node (guidance 3.5 for full photorealism & detail)
+    if is_dev:
+        workflow["6_guidance"] = {
+            "inputs": {
+                "conditioning": ["6", 0],
+                "guidance": 3.5
+            },
+            "class_type": "FluxGuidance"
+        }
+        positive_source = ["6_guidance", 0]
 
     # Node 7: Negative Prompt
     workflow["7"] = {
@@ -336,7 +349,7 @@ async def generate_image(payload: dict):
             "scheduler": scheduler,
             "denoise": 1.0,
             "model": model_source,
-            "positive": ["6", 0],
+            "positive": positive_source,
             "negative": ["7", 0],
             "latent_image": ["5", 0]
         },
@@ -369,10 +382,11 @@ async def generate_image(payload: dict):
         }
         last_image_node = ["11", 0]
 
-    # Node 9: Save Image
+    # Node 9: Save Image with Model Name embedded in Filename
+    clean_model_slug = os.path.splitext(ckpt_name)[0].replace(".", "_").replace("-", "_")
     workflow["9"] = {
         "inputs": {
-            "filename_prefix": "Studio_Gen",
+            "filename_prefix": f"Studio_Gen_{clean_model_slug}",
             "images": last_image_node
         },
         "class_type": "SaveImage"
