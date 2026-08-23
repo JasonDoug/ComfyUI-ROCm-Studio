@@ -17,8 +17,9 @@ export HSA_ENABLE_SDMA=1
 export AMD_DISABLE_HSA_P2P=1
 export MIOPEN_FIND_ENFORCE=3
 
-# HIP Memory Allocator Tuning for Unified APU Architecture (51.5 GB RAM)
+# HIP & CUDA Memory Allocator Tuning for Unified APU Architecture (51.5 GB RAM)
 export PYTORCH_HIP_ALLOC_CONF=expandable_segments:True,garbage_collection_threshold:0.8
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True,garbage_collection_threshold:0.8
 
 # Activate virtual environment
 if [ -d "$DIR/venv" ]; then
@@ -27,9 +28,8 @@ fi
 
 export PYTHONUNBUFFERED=1
 
-# Launch ComfyUI with PyTorch SDPA cross-attention, high VRAM caching, and APU memory flags
+# Launch ComfyUI with PyTorch SDPA cross-attention and APU memory flags
 python -u main.py \
     --use-pytorch-cross-attention \
     --disable-pinned-memory \
-    --highvram \
     "$@" 2>&1 | tee -a comfyui.log
