@@ -847,6 +847,79 @@ async def websocket_endpoint(websocket: WebSocket, clientId: str = ""):
         pass
 
 
+@app.post("/api/generate_zerogpu")
+async def generate_zerogpu(payload: dict):
+    """Executes serverless image generation via private/public HF ZeroGPU Space."""
+    import shutil
+    from gradio_client import Client
+    
+    prompt = payload.get("prompt", "")
+    style = payload.get("style", "Academic Oil Painting")
+    aspect_ratio = payload.get("aspect_ratio", "Torso-up Character Card (3:4)")
+    steps = int(payload.get("steps", 25))
+    guidance = float(payload.get("guidance", 3.5))
+    seed = int(payload.get("seed", -1))
+    
+    # Priority Space: User's private ZeroGPU Space, falling back to public FLUX.1-dev Space
+    hf_token = os.environ.get("HF_TOKEN")
+    space_id = payload.get("space_id") or "cdarwin7/Roman-Sim-ZeroGPU-Studio"
+    
+    try:
+        print(f"[ZeroGPU] Connecting to Space: {space_id}...")
+        client = Client(space_id, hf_token=hf_token)
+        
+        # Predict using API endpoint /infer
+        res = client.predict(
+            prompt=prompt,
+            style=style,
+            aspect_ratio=aspect_ratio,
+            steps=steps,
+            guidance_scale=guidance,
+            seed=seed,
+            api_name="/infer"
+        )
+        
+        # res returns (filepath, seed_used)
+        temp_img_path = res[0] if isinstance(res, (tuple, list)) else res
+        
+        output_filename = f"Studio_Gen_ZeroGPU_RomanSim_{clean_slug(prompt[:20])}_{int(time.time())}.png"
+        output_path = os.path.join(COMFY_OUTPUT_DIR, output_filename)
+        shutil.copy(temp_img_path, output_path)
+        
+        return JSONResponse({
+            "status": "success",
+            "prompt_id": f"zerogpu-{int(time.time())}",
+            "filename": output_filename,
+            "subfolder": "",
+            "type": "output"
+        })
+    except Exception as e:
+        print(f"[ZeroGPU Error] {str(e)}")
+        # Fallback to public Space if private Space is building
+        try:
+            print("[ZeroGPU] Falling back to public black-forest-labs/FLUX.1-dev Space...")
+            pub_client = Client("black-forest-labs/FLUX.1-dev", hf_token=hf_token)
+            pub_res = pub_client.predict(
+                prompt=prompt,
+                num_inference_steps=steps,
+                guidance_scale=guidance,
+                api_name="/infer"
+            )
+            temp_img_path = pub_res[0] if isinstance(pub_res, (tuple, list)) else pub_res
+            output_filename = f"Studio_Gen_ZeroGPU_Public_{clean_slug(prompt[:20])}_{int(time.time())}.png"
+            output_path = os.path.join(COMFY_OUTPUT_DIR, output_filename)
+            shutil.copy(temp_img_path, output_path)
+            return JSONResponse({
+                "status": "success",
+                "prompt_id": f"zerogpu-pub-{int(time.time())}",
+                "filename": output_filename,
+                "subfolder": "",
+                "type": "output"
+            })
+        except Exception as pub_e:
+            raise HTTPException(status_code=500, detail=f"ZeroGPU Space Execution Failed: {str(e)} | Fallback: {str(pub_e)}")
+
+
 # Serve Static UI
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(STATIC_DIR, exist_ok=True)

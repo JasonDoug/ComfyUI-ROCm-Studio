@@ -441,8 +441,57 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('prompt-input').value = prompt;
         }
 
+        const engineSelected = document.querySelector('input[name="inference-engine"]:checked')?.value || 'local';
+
         startTimer();
         generateBtn.disabled = true;
+        
+        if (engineSelected === 'zerogpu') {
+            generateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Rendering on ZeroGPU H100...';
+            genStatus.textContent = "Connecting to Private ZeroGPU Space...";
+            progressBar.style.width = '25%';
+
+            const payload = {
+                prompt: prompt,
+                steps: parseInt(document.getElementById('steps-slider').value) || 25,
+                guidance: 3.5,
+                seed: Math.floor(Math.random() * 1000000000)
+            };
+
+            try {
+                const response = await fetch('/api/generate_zerogpu', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (data.status === 'success' && data.filename) {
+                    progressBar.style.width = '100%';
+                    genStatus.textContent = "ZeroGPU Generation Complete!";
+                    stopTimer();
+
+                    const imgUrl = `/api/image?filename=${encodeURIComponent(data.filename)}&subfolder=${encodeURIComponent(data.subfolder || '')}&type=output`;
+                    resultImg.src = imgUrl;
+                    resultImg.style.display = 'block';
+                    if (canvasPlaceholder) canvasPlaceholder.style.display = 'none';
+
+                    downloadLink.href = imgUrl;
+                    downloadLink.download = data.filename;
+                    imageActions.style.display = 'flex';
+                } else {
+                    alert("ZeroGPU Error: " + (data.detail || JSON.stringify(data)));
+                    stopTimer();
+                }
+            } catch (err) {
+                alert("ZeroGPU Error: " + err.message);
+                stopTimer();
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Image';
+            }
+            return;
+        }
+
         generateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Rendering on GPU...';
         genStatus.textContent = "Submitting to ComfyUI...";
         progressBar.style.width = '10%';

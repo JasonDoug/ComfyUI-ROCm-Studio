@@ -53,7 +53,24 @@
                 <div class="grid-layout">
                     <!-- Controls Panel -->
                     <div class="controls-card">
-                        <div class="form-group">
+                        <!-- Inference Engine Selector Card -->
+                        <div class="form-group" style="background: rgba(99,102,241,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(99,102,241,0.3); margin-bottom: 16px;">
+                            <label style="font-weight: 600; color: #a5b4fc; margin-bottom: 8px; display: block; font-size: 13px;">
+                                <i class="fa-solid fa-server"></i> Inference Engine Source
+                            </label>
+                            <div class="radio-group" style="display: flex; flex-direction: column; gap: 6px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px;">
+                                    <input type="radio" name="inference-engine" value="local" checked>
+                                    <span><i class="fa-solid fa-microchip" style="color: #10b981;"></i> <strong>Local AMD iGPU</strong> (Radeon 890M • ComfyUI)</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px;">
+                                    <input type="radio" name="inference-engine" value="zerogpu">
+                                    <span><i class="fa-solid fa-bolt" style="color: #ec4899;"></i> <strong>HF ZeroGPU Cloud</strong> (Private H100 Serverless)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="model-select-container">
                             <label><i class="fa-solid fa-microchip"></i> Select Model Checkpoint</label>
                             <select id="ckpt-select" class="form-control">
                                 <option value="">Loading models...</option>
