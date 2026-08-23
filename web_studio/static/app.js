@@ -3,17 +3,24 @@ function initStudioApp() {
     const navButtons = document.querySelectorAll('.nav-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    window.switchTab = function switchTab(tabId) {
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        navButtons.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(t => t.classList.remove('active'));
+        const btn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
+        const sec = document.getElementById(tabId);
+        if (btn) btn.classList.add('active');
+        if (sec) sec.classList.add('active');
+        if (tabId === 'tab-gallery' && typeof window.loadGallery === 'function') {
+            window.loadGallery();
+        }
+    };
+
     navButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetTab = btn.getAttribute('data-tab');
-            navButtons.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            const targetEl = document.getElementById(targetTab);
-            if (targetEl) targetEl.classList.add('active');
-            if (targetTab === 'tab-gallery' && typeof window.loadGallery === 'function') {
-                window.loadGallery();
-            }
+            window.switchTab(targetTab);
         });
     });
 
