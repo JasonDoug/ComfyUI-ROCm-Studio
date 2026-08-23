@@ -31,8 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
     imagePresetButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const presetPrompt = btn.getAttribute('data-prompt');
-            if (presetPrompt && promptInput) {
-                promptInput.value = presetPrompt;
+            const targetInput = document.getElementById('prompt-input');
+            if (presetPrompt && targetInput) {
+                targetInput.value = presetPrompt;
             }
         });
     });
@@ -948,6 +949,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.addEventListener('click', (e) => {
+        const imageBtn = e.target.closest('.image-btn');
+        if (imageBtn) {
+            const promptVal = imageBtn.getAttribute('data-prompt');
+            const targetInput = document.getElementById('prompt-input');
+            if (promptVal && targetInput) {
+                targetInput.value = promptVal;
+            }
+        }
         const toggleBtn = e.target.closest('.toggle-log-src-btn');
         if (toggleBtn) {
             inlineLogTarget = (inlineLogTarget === 'comfyui') ? 'studio' : 'comfyui';
