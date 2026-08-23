@@ -501,6 +501,13 @@ class AceStepTimbreEncoder(nn.Module):
 
 
 def pack_sequences(hidden1, hidden2, mask1, mask2):
+    if hidden1 is None and hidden2 is None:
+        return None, None
+    if hidden1 is None:
+        return hidden2, mask2
+    if hidden2 is None:
+        return hidden1, mask1
+
     hidden_cat = torch.cat([hidden1, hidden2], dim=1)
     B, L, D = hidden_cat.shape
 
@@ -575,17 +582,20 @@ class AceStepConditionEncoder(nn.Module):
         refer_audio_acoustic_hidden_states_packed=None,
         refer_audio_order_mask=None
     ):
-        text_emb = self.text_projector(text_hidden_states)
+        text_emb = self.text_projector(text_hidden_states) if text_hidden_states is not None else None
 
         lyric_emb = self.lyric_encoder(
             inputs_embeds=lyric_hidden_states,
             attention_mask=lyric_attention_mask
-        )
+        ) if lyric_hidden_states is not None else None
 
-        timbre_emb, timbre_mask = self.timbre_encoder(
-            refer_audio_acoustic_hidden_states_packed,
-            refer_audio_order_mask
-        )
+        if refer_audio_acoustic_hidden_states_packed is not None:
+            timbre_emb, timbre_mask = self.timbre_encoder(
+                refer_audio_acoustic_hidden_states_packed,
+                refer_audio_order_mask
+            )
+        else:
+            timbre_emb, timbre_mask = None, None
 
         merged_emb, merged_mask = pack_sequences(lyric_emb, timbre_emb, lyric_attention_mask, timbre_mask)
         final_emb, final_mask = pack_sequences(merged_emb, text_emb, merged_mask, text_attention_mask)

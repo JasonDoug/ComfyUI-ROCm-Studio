@@ -25,6 +25,12 @@ class TextEncodeAceStepAudio(IO.ComfyNode):
     def execute(cls, clip, tags, lyrics, lyrics_strength) -> IO.NodeOutput:
         tokens = clip.tokenize(tags, lyrics=lyrics)
         conditioning = clip.encode_from_tokens_scheduled(tokens)
+        for i in range(len(conditioning)):
+            if conditioning[i][0] is None:
+                conditioning[i][0] = torch.zeros((1, 512, 2048), device=comfy.model_management.intermediate_device(), dtype=comfy.model_management.intermediate_dtype())
+            if conditioning[i][1].get("pooled_output") is None:
+                c_tensor = conditioning[i][0]
+                conditioning[i][1]["pooled_output"] = torch.zeros((c_tensor.shape[0], 2048), device=c_tensor.device, dtype=c_tensor.dtype)
         conditioning = node_helpers.conditioning_set_values(conditioning, {"lyrics_strength": lyrics_strength})
         return IO.NodeOutput(conditioning)
 
@@ -58,6 +64,12 @@ class TextEncodeAceStepAudio15(IO.ComfyNode):
     def execute(cls, clip, tags, lyrics, seed, bpm, duration, timesignature, language, keyscale, generate_audio_codes, cfg_scale, temperature, top_p, top_k, min_p) -> IO.NodeOutput:
         tokens = clip.tokenize(tags, lyrics=lyrics, bpm=bpm, duration=duration, timesignature=int(timesignature), language=language, keyscale=keyscale, seed=seed, generate_audio_codes=generate_audio_codes, cfg_scale=cfg_scale, temperature=temperature, top_p=top_p, top_k=top_k, min_p=min_p)
         conditioning = clip.encode_from_tokens_scheduled(tokens)
+        for i in range(len(conditioning)):
+            if conditioning[i][0] is None:
+                conditioning[i][0] = torch.zeros((1, 512, 2048), device=comfy.model_management.intermediate_device(), dtype=comfy.model_management.intermediate_dtype())
+            if conditioning[i][1].get("pooled_output") is None:
+                c_tensor = conditioning[i][0]
+                conditioning[i][1]["pooled_output"] = torch.zeros((c_tensor.shape[0], 2048), device=c_tensor.device, dtype=c_tensor.dtype)
         return IO.NodeOutput(conditioning)
 
 

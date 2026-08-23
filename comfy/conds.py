@@ -31,6 +31,8 @@ class CONDRegular:
         return self.__class__(cond)
 
     def process_cond(self, batch_size, **kwargs):
+        if self.cond is None:
+            return self._copy_with(None)
         return self._copy_with(comfy.utils.repeat_to_batch_size(self.cond, batch_size))
 
     def can_concat(self, other):
@@ -42,12 +44,14 @@ class CONDRegular:
         return True
 
     def concat(self, others):
-        conds = [self.cond]
-        for x in others:
-            conds.append(x.cond)
+        conds = [x.cond for x in [self] + list(others) if x.cond is not None]
+        if not conds:
+            return None
         return torch.cat(conds)
 
     def size(self):
+        if self.cond is None:
+            return [1]
         return list(self.cond.size())
 
 

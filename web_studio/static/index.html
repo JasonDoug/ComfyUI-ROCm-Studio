@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ComfyUI Creative Studio - AMD gfx1150 Native</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid me-2 fa-bolt text-gradient"></i>
+                <h2>Studio AI</h2>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-tab="tab-image">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Image Studio
+                </button>
+                <button class="nav-btn" data-tab="tab-vision">
+                    <i class="fa-solid fa-eye"></i> Vision-to-Prompt
+                </button>
+                <button class="nav-btn" data-tab="tab-audio">
+                    <i class="fa-solid fa-microphone"></i> Audio & Speech
+                </button>
+                <button class="nav-btn" data-tab="tab-roadmap">
+                    <i class="fa-solid fa-map-location-dot"></i> Model Roadmap
+                </button>
+            </nav>
+            <div class="hardware-badge">
+                <span class="status-dot online"></span>
+                <div>
+                    <strong>AMD Radeon 890M</strong>
+                    <small>ROCm 7.14 • GFX1150 Native</small>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- TAB 1: Image Studio -->
+            <section id="tab-image" class="tab-content active">
+                <header class="header">
+                    <h1>AI Image Studio</h1>
+                    <p>Powered by Headless ComfyUI & Local SDXL / Flux Models</p>
+                </header>
+
+                <div class="grid-layout">
+                    <!-- Controls Panel -->
+                    <div class="controls-card">
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-microchip"></i> Select Model Checkpoint</label>
+                            <select id="ckpt-select" class="form-control">
+                                <option value="">Loading models...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label style="margin: 0;"><i class="fa-solid fa-comment-dots"></i> Prompt</label>
+                                <button type="button" id="enhance-image-prompt-btn" class="btn btn-secondary" style="font-size: 11px; padding: 3px 10px; background: rgba(99,102,241,0.2); border: 1px solid var(--accent-primary); color: #a5b4fc; cursor: pointer; border-radius: 6px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Enhance Prompt</button>
+                            </div>
+                            <textarea id="prompt-input" class="form-control" rows="3" placeholder="Describe the image you want to generate...">A distinguished Roman senator wearing a fine white wool toga with a purple border, clean shaven with sharp classical features, standing in the marble colonnades of the 1st century Roman Forum, golden hour sunlight casting dramatic shadows, high historical detail, 8k resolution, masterpiece</textarea>
+                            
+                            <div class="genre-presets-container" style="margin-top: 10px;">
+                                <small style="color: var(--text-muted); display: block; margin-bottom: 6px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Quick Genre Presets:</small>
+                                <div class="genre-buttons">
+                                    <button type="button" class="genre-btn" data-prompt="a roman senator, clean shaven in the first century roman forum"><i class="fa-solid fa-landmark"></i> Roman History</button>
+                                    <button type="button" class="genre-btn" data-prompt="classical academic oil painting of a majestic scene, rich oil paint textures, chiaroscuro lighting, masterpiece composition"><i class="fa-solid fa-palette"></i> Oil Painting</button>
+                                    <button type="button" class="genre-btn" data-prompt="futuristic cyberpunk cityscape at night, neon reflections, rain-slicked streets, glowing holographic signs, 8k resolution"><i class="fa-solid fa-city"></i> Cyberpunk</button>
+                                    <button type="button" class="genre-btn" data-prompt="breathtaking high fantasy landscape with ancient castle perched on majestic mountains, ethereal lighting, waterfalls, epic scale"><i class="fa-solid fa-dragon"></i> Fantasy</button>
+                                    <button type="button" class="genre-btn" data-prompt="photorealistic portrait of a charismatic figure, soft studio portrait lighting, 85mm lens f/1.8, sharp focus, natural skin texture, 8k"><i class="fa-solid fa-camera"></i> Portrait</button>
+                                    <button type="button" class="genre-btn" data-prompt="vibrant anime masterpiece, detailed background, expressive lighting, cel shaded fine detail, 8k"><i class="fa-solid fa-masks-theater"></i> Anime Art</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-ban"></i> Negative Prompt</label>
+                            <textarea id="neg-prompt-input" class="form-control" rows="2" placeholder="Elements to avoid (text, blur, artifacts...)">text, watermark, blurry, low quality, deformed, extra limbs</textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col">
+                                <label><i class="fa-solid fa-expand"></i> Aspect Ratio</label>
+                                <div class="preset-buttons">
+                                    <button class="preset-btn active" data-w="1024" data-h="1024">1:1</button>
+                                    <button class="preset-btn" data-w="1344" data-h="768">16:9</button>
+                                    <button class="preset-btn" data-w="768" data-h="1344">9:16</button>
+                                    <button class="preset-btn" data-w="1152" data-h="864">4:3</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion">
+                            <details open>
+                                <summary><i class="fa-solid fa-sliders"></i> Advanced Generation Settings</summary>
+                                <div class="accordion-body">
+                                    <div class="form-row">
+                                        <div class="form-group col">
+                                            <label>Steps: <span id="steps-val">25</span></label>
+                                            <input type="range" id="steps-slider" min="1" max="50" value="25">
+                                        </div>
+                                        <div class="form-group col">
+                                            <label>CFG Scale: <span id="cfg-val">7.0</span></label>
+                                            <input type="range" id="cfg-slider" min="1" max="20" step="0.5" value="7.0">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group col">
+                                            <label>Sampler</label>
+                                            <select id="sampler-select" class="form-control">
+                                                <option value="euler">euler</option>
+                                                <option value="dpmpp_2m">dpmpp_2m</option>
+                                                <option value="dpmpp_sde">dpmpp_sde</option>
+                                                <option value="heun">heun</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col">
+                                            <label>Scheduler</label>
+                                            <select id="scheduler-select" class="form-control">
+                                                <option value="normal">normal</option>
+                                                <option value="karras">karras</option>
+                                                <option value="exponential">exponential</option>
+                                                <option value="sgm_uniform">sgm_uniform</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Seed</label>
+                                        <div class="input-group">
+                                            <input type="number" id="seed-input" class="form-control" value="42">
+                                            <button id="random-seed-btn" class="btn btn-secondary"><i class="fa-solid fa-dice"></i></button>
+                                        </div>
+                                    </div>
+                                     <div class="form-group">
+                                         <label>LoRA Model</label>
+                                         <select id="lora-select" class="form-control">
+                                             <option value="None">None (Disabled)</option>
+                                         </select>
+                                         <div id="lora-triggers-container" class="trigger-words-box hidden">
+                                             <small><i class="fa-solid fa-tags"></i> Trigger Words (click to add to prompt):</small>
+                                             <div id="trigger-badges" class="badges-wrapper"></div>
+                                         </div>
+                                     </div>
+                                    <div class="form-group">
+                                        <label>LoRA Strength: <span id="lora-strength-val">1.0</span></label>
+                                        <input type="range" id="lora-strength-slider" min="0" max="2" step="0.1" value="1.0">
+                                    </div>
+                                    <div class="form-group checkbox-group">
+                                        <label>
+                                            <input type="checkbox" id="upscale-checkbox"> 
+                                            Enable AI 4x Upscaling (RealESRGAN)
+                                        </label>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+
+                        <button id="generate-btn" type="button" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-play"></i> Generate Image
+                        </button>
+                    </div>
+
+                    <!-- Output & Preview Panel -->
+                    <div class="preview-card">
+                        <div class="preview-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h3 style="margin: 0;"><i class="fa-solid fa-image"></i> Result Preview</h3>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <div class="timer-badge hidden" id="hf-timer-badge" style="background: rgba(99, 102, 241, 0.15); border: 1px solid var(--accent-primary); padding: 4px 12px; border-radius: 20px; font-size: 12px; color: #a5b4fc; display: inline-flex; align-items: center; gap: 6px; font-weight: 500;">
+                                    <i class="fa-regular fa-clock fa-spin"></i> <span id="timer-text">0.0s</span>
+                                </div>
+                                <div class="status-indicator" id="gen-status">Ready</div>
+                            </div>
+                        </div>
+
+                        <div class="progress-bar-container" style="position: relative; height: 20px; background-color: #0e121a; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; margin-bottom: 16px;">
+                            <div class="progress-bar" id="progress-bar" style="width: 0%; height: 100%; background: var(--accent-gradient); transition: width 0.2s ease;"></div>
+                            <div class="progress-text" id="progress-text" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); pointer-events: none;">0% • Ready</div>
+                        </div>
+
+                        <div class="canvas-area" id="canvas-area">
+                            <div class="placeholder-text">
+                                <i class="fa-solid fa-wand-magic"></i>
+                                <p>Click Generate to render your image on AMD Radeon 890M</p>
+                            </div>
+                            <img id="result-image" class="result-img hidden" alt="Generated Output">
+                        </div>
+
+                        <div class="action-buttons hidden" id="image-actions">
+                            <a id="download-link" download="generated_image.png" class="btn btn-secondary"><i class="fa-solid fa-download"></i> Download</a>
+                            <button id="use-as-vision-btn" class="btn btn-secondary"><i class="fa-solid fa-eye"></i> Analyze with Vision AI</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gallery Section -->
+                <section class="gallery-section">
+                    <h3><i class="fa-solid fa-clock-rotate-left"></i> Session Gallery</h3>
+                    <div class="gallery-grid" id="gallery-grid">
+                        <p class="empty-gallery">No images generated yet this session.</p>
+                    </div>
+                </section>
+            </section>
+
+            <!-- TAB 2: Vision-to-Prompt -->
+            <section id="tab-vision" class="tab-content">
+                <header class="header">
+                    <h1>Vision-to-Prompt Assistant</h1>
+                    <p>Powered by Local Moondream2 & Starmie Vision-Language Models</p>
+                </header>
+
+                <div class="grid-layout">
+                    <div class="controls-card">
+                        <div class="form-group">
+                            <label>Upload Reference Image</label>
+                            <input type="file" id="vision-file-input" class="form-control" accept="image/*">
+                        </div>
+                        <div class="image-dropzone" id="vision-dropzone">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <p>Drag & drop image here or click to browse</p>
+                            <img id="vision-preview" class="vision-img-preview hidden" alt="Upload Preview">
+                        </div>
+                        <button id="analyze-image-btn" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-eye"></i> Extract Detailed Prompt
+                        </button>
+                    </div>
+
+                    <div class="preview-card">
+                        <h3>Extracted Prompt & Analysis</h3>
+                        <textarea id="vision-result-prompt" class="form-control" rows="8" placeholder="Extracted prompt will appear here..."></textarea>
+                        <div class="mt-3">
+                            <button id="copy-to-studio-btn" class="btn btn-primary"><i class="fa-solid fa-arrow-right-to-bracket"></i> Send Prompt to Image Studio</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: Music & Audio Studio -->
+            <section id="tab-audio" class="tab-content">
+                <header class="header">
+                    <h1>Music & Audio Studio</h1>
+                    <p>Powered by Qwen3-TTS (TTS, Voice Cloning, Voice Design), MiniMax Music 3 & Dia Audio</p>
+                </header>
+
+                <div class="grid-layout">
+                    <div class="controls-card">
+                        <!-- Mode Tabs for Qwen3-TTS & Music -->
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-sliders"></i> Generation Mode</label>
+                            <div class="preset-buttons" style="margin-bottom: 12px;">
+                                <button type="button" class="preset-btn active" id="mode-btn-music" data-mode="music"><i class="fa-solid fa-music"></i> Music</button>
+                                <button type="button" class="preset-btn" id="mode-btn-tts" data-mode="tts"><i class="fa-solid fa-volume-high"></i> Standard TTS</button>
+                                <button type="button" class="preset-btn" id="mode-btn-clone" data-mode="clone"><i class="fa-solid fa-copy"></i> Voice Clone</button>
+                                <button type="button" class="preset-btn" id="mode-btn-design" data-mode="design"><i class="fa-solid fa-wand-magic-sparkles"></i> Voice Design</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-compact-disc"></i> Select Model / Engine</label>
+                            <select id="tts-voice-select" class="form-control">
+                                <option value="minimax_music3_dit_fp16.safetensors">🎵 MiniMax Music 3 (DiT FP16)</option>
+                                <option value="Qwen3-TTS-1.7B-VoiceDesign">🗣️ Qwen3-TTS 1.7B Voice Design</option>
+                                <option value="Qwen3-TTS-1.7B-CustomVoice">🗣️ Qwen3-TTS 1.7B Custom Voice / Clone</option>
+                                <option value="Qwen3-TTS-0.6B-Base">🗣️ Qwen3-TTS 0.6B Base Engine</option>
+                                <option value="Dia_Q5_DAC_F16.gguf">🎶 Dia Music & Audio (Q5 DAC)</option>
+                                <option value="acestep_v1.5_sft_xl.safetensors">🎸 ACE Step Music 1.5</option>
+                                <option value="Kokoro-82M">🗣️ Kokoro 82M Speech (Fast & Clear)</option>
+                                <option value="Parler-TTS-Mini">🗣️ Parler TTS Mini Q5</option>
+                            </select>
+                        </div>
+
+                        <!-- Voice Cloning Inputs (hidden by default) -->
+                        <div id="qwen-cloning-section" class="form-group hidden" style="background: rgba(99,102,241,0.08); padding: 12px; border-radius: 8px; border: 1px dashed var(--border-color);">
+                            <label><i class="fa-solid fa-file-audio"></i> Reference Voice Audio (3-10 Seconds)</label>
+                            <input type="file" id="qwen-ref-audio" class="form-control" accept="audio/*">
+                            <label style="margin-top: 8px; display: block;"><i class="fa-solid fa-quote-left"></i> Reference Audio Transcript (Optional)</label>
+                            <input type="text" id="qwen-ref-text" class="form-control" placeholder="Text spoken in the reference audio clip...">
+                        </div>
+
+                        <!-- Voice Design Description Input (hidden by default) -->
+                        <div id="qwen-design-section" class="form-group hidden" style="background: rgba(16,185,129,0.08); padding: 12px; border-radius: 8px; border: 1px dashed #10b981;">
+                            <label><i class="fa-solid fa-user-astronaut"></i> Natural Language Voice Description</label>
+                            <input type="text" id="qwen-voice-description" class="form-control" placeholder="e.g. A warm, gentle female voice with a subtle British accent and calm pacing...">
+                        </div>
+
+                        <!-- MiniMax Music 3 Multi-Prompt Input Section (Simple vs Studio Mode) -->
+                        <div id="minimax-multiprompt-section" class="form-group" style="background: rgba(168,85,247,0.08); padding: 16px; border-radius: 10px; border: 1px dashed #a855f7; margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <label style="color: #c084fc; font-weight: 600; margin: 0;"><i class="fa-solid fa-compact-disc"></i> MiniMax Music 3 Mode</label>
+                                <div class="preset-buttons" style="gap: 4px;">
+                                    <button type="button" class="preset-btn active" id="minimax-tab-simple" style="padding: 4px 10px; font-size: 11px;"><i class="fa-solid fa-bolt"></i> Simple Mode</button>
+                                    <button type="button" class="preset-btn" id="minimax-tab-studio" style="padding: 4px 10px; font-size: 11px;"><i class="fa-solid fa-sliders"></i> Studio Mode</button>
+                                </div>
+                            </div>
+
+                            <!-- MiniMax Simple Mode Controls -->
+                            <div id="minimax-simple-container">
+                                <label style="display: block; margin-bottom: 4px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Song Description & Style Prompt</label>
+                                <textarea id="minimax-simple-prompt" class="form-control" rows="3" placeholder="Enter full song description (e.g. Energetic synthwave track with soaring lead melodies, heavy drums, and male vocals)...">An uplifting 80s synthwave track with energetic beats, rich synthesizer melodies, and retro electronic drums</textarea>
+                            </div>
+
+                            <!-- MiniMax Studio Mode Controls (Hidden by default) -->
+                            <div id="minimax-studio-container" class="hidden">
+                                <div style="margin-bottom: 12px; background: rgba(99,102,241,0.08); padding: 12px; border-radius: 8px; border: 1px dashed var(--accent-primary);">
+                                    <label style="display: block; font-weight: 600; color: #a5b4fc; margin-bottom: 4px;"><i class="fa-solid fa-lightbulb"></i> Raw Song Concept / Prompt Idea</label>
+                                    <textarea id="minimax-concept-input" class="form-control" rows="2" placeholder="Type your raw song idea here (e.g. Fast-paced rock track about racing through desert highways with heavy distorted guitars)..."></textarea>
+                                </div>
+
+                                <label style="display: block; margin-bottom: 4px;"><i class="fa-solid fa-guitar"></i> 1. Genre & Musical Style</label>
+                                <textarea id="minimax-style-prompt" class="form-control" rows="2" placeholder="e.g. Upbeat 80s synthwave, 120 bpm, energetic synthesizer, punchy drums" style="margin-bottom: 8px; resize: vertical;"></textarea>
+                                
+                                <label style="display: block; margin-bottom: 4px;"><i class="fa-solid fa-user-astronaut"></i> 2. Vocal & Performance Specification</label>
+                                <textarea id="minimax-vocal-prompt" class="form-control" rows="2" placeholder="e.g. Female vocal, energetic, emotional, crisp high pitch" style="margin-bottom: 8px; resize: vertical;"></textarea>
+
+                                <label style="display: block; margin-bottom: 4px;"><i class="fa-solid fa-layer-group"></i> 3. Song Structure & Arrangement Timeline</label>
+                                <textarea id="minimax-instrument-prompt" class="form-control" rows="3" placeholder="e.g. Intro (synth pad swell) -> Verse 1 (gated bass) -> Chorus (full brass crescendo) -> Outro (decaying arpeggios)" style="margin-bottom: 8px; resize: vertical;"></textarea>
+
+                                <label style="display: block;"><i class="fa-solid fa-align-left"></i> 4. Dedicated Vocal Lyrics (with Section Tags)</label>
+                                <textarea id="minimax-lyrics-prompt" class="form-control" rows="5" placeholder="[Intro]&#10;(Atmospheric synth pad build up)&#10;&#10;[Verse 1]&#10;Dancing in the neon light&#10;Running through the city night&#10;&#10;[Chorus]&#10;We are electric, we are alive!&#10;&#10;[Outro]&#10;(Fading synth lead)"></textarea>
+                            </div>
+
+                            <!-- Song Duration Slider -->
+                            <div style="margin-top: 12px; display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px;">
+                                <label style="font-size: 12px; color: var(--text-muted); margin: 0;"><i class="fa-solid fa-clock"></i> Target Song Duration: <span id="minimax-duration-val" style="color: var(--text-main); font-weight: 600;">60s</span></label>
+                                <input type="range" id="minimax-duration-slider" min="15" max="300" step="15" value="60" style="width: 50%;">
+                            </div>
+
+                            <!-- MiniMax Skill Music Caption Rewriter Button -->
+                            <div style="margin-top: 12px;">
+                                <button type="button" id="minimax-rewrite-btn" class="btn btn-secondary btn-block" style="width: 100%; background: rgba(168,85,247,0.2); border: 1px solid #a855f7; color: #e9d5ff; font-size: 13px; padding: 8px 12px; border-radius: 8px; cursor: pointer;">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Apply MiniMax Music Caption Rewriter (SKILL.md)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label id="audio-prompt-label"><i class="fa-solid fa-music"></i> Music Description / Audio Prompt</label>
+                            <textarea id="tts-text-input" class="form-control" rows="3" placeholder="Describe the music or speech to generate...">An uplifting 80s synthwave track with energetic beats, rich synthesizer melodies, and retro electronic drums</textarea>
+                            
+                            <div id="music-presets-wrapper" class="genre-presets-container" style="margin-top: 10px;">
+                                <small style="color: var(--text-muted); display: block; margin-bottom: 6px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Music Genre Presets:</small>
+                                <div class="music-genre-buttons" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                    <button type="button" class="genre-btn music-btn" data-prompt="An epic classical orchestral symphony, soaring violins, majestic brass crescendo, studio master quality"><i class="fa-solid fa-record-vinyl"></i> Classical</button>
+                                    <button type="button" class="genre-btn music-btn" data-prompt="An uplifting 80s synthwave track with energetic beats, rich synthesizer melodies, and retro electronic drums"><i class="fa-solid fa-bolt"></i> Synthwave</button>
+                                    <button type="button" class="genre-btn music-btn" data-prompt="Relaxing lo-fi chillhop beat, warm electric piano chords, vinyl crackle, cozy nighttime ambiance"><i class="fa-solid fa-mug-hot"></i> Lo-Fi Chill</button>
+                                    <button type="button" class="genre-btn music-btn" data-prompt="Energetic electric guitar riff, heavy rock drum beat, driving bassline, high energy studio recording"><i class="fa-solid fa-guitar"></i> Rock</button>
+                                    <button type="button" class="genre-btn music-btn" data-prompt="Smooth lounge jazz, saxophone solo, gentle acoustic bass, brushed snare drums, sophisticated atmosphere"><i class="fa-solid fa-saxophone"></i> Jazz</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="generate-speech-btn" class="btn btn-primary btn-block" style="margin-top: 16px;">
+                            <i class="fa-solid fa-play"></i> Generate Audio / Voice
+                        </button>
+                    </div>
+
+                    <!-- Audio Generation Progress Indicator -->
+                    <div id="audio-progress-container" class="hidden" style="margin-top: 16px; margin-bottom: 16px; background: rgba(15, 23, 42, 0.7); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span id="audio-progress-status" style="font-size: 13px; font-weight: 600; color: #a5b4fc;"><i class="fa-solid fa-spinner fa-spin"></i> Initializing Audio Model...</span>
+                            <span id="audio-progress-percent" style="font-weight: 700; color: var(--accent-primary); font-size: 14px;">0%</span>
+                        </div>
+                        <div style="width: 100%; background: rgba(255,255,255,0.08); height: 10px; border-radius: 5px; overflow: hidden;">
+                            <div id="audio-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899); transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+
+                    <div class="preview-card">
+                        <h3><i class="fa-solid fa-headphones"></i> Audio Playback & Output</h3>
+                        <div class="audio-player-box" style="padding: 24px; text-align: center; background-color: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border-color);">
+                            <i class="fa-solid fa-music audio-icon" style="font-size: 48px; color: var(--accent-primary); margin-bottom: 16px; display: block;"></i>
+                            <p id="audio-status-text" style="color: var(--text-muted); margin-bottom: 16px;">Ready to generate music or audio track.</p>
+                            <audio id="tts-audio-player" controls style="width: 100%; margin-bottom: 12px;"></audio>
+                            <div id="audio-download-container" class="hidden" style="margin-top: 12px;">
+                                <a id="audio-download-link" class="btn btn-secondary" href="#" download style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600;">
+                                    <i class="fa-solid fa-download"></i> Download Audio Track (.flac)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: Model Roadmap -->
+            <section id="tab-roadmap" class="tab-content">
+                <header class="header">
+                    <h1>Model Download & Integration Roadmap</h1>
+                    <p>Future Enhancements & Direct Repository Connectivity</p>
+                </header>
+
+                <div class="roadmap-container">
+                    <div class="roadmap-card">
+                        <span class="badge badge-done">Completed</span>
+                        <h3>Phase 1: Native ROCm 7.14 Hardware Setup</h3>
+                        <p>Deploys ComfyUI natively on AMD gfx1150 with PyTorch 2.13, SDPA cross-attention, AOTriton fused attention, and SDMA page transfers.</p>
+                    </div>
+
+                    <div class="roadmap-card">
+                        <span class="badge badge-current">In Progress</span>
+                        <h3>Phase 2: Custom Headless Studio UI</h3>
+                        <p>Provides node-graph abstractions, simple controls, custom aspect ratios, LoRA sliders, and instant model switching pointed at <code>/home/jason/models</code>.</p>
+                    </div>
+
+                    <div class="roadmap-card">
+                        <span class="badge badge-future">Planned Roadmap</span>
+                        <h3>Phase 3: Hugging Face & CivitAI Red Model Downloader</h3>
+                        <p>Enables direct, user-authorized search and download of new Checkpoints, GGUF weights, and LoRAs directly into <code>/home/jason/models</code> with zero manual file moving.</p>
+                    </div>
+
+                    <div class="roadmap-card">
+                        <span class="badge badge-future">Planned Roadmap</span>
+                        <h3>Phase 4: Docker & LXD Containerization</h3>
+                        <p>Creates reproducible Docker and LXD system containers with GPU device passthrough (<code>/dev/kfd</code>, <code>/dev/dri</code>) capturing the entire environment.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
