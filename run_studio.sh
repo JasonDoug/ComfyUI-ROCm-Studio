@@ -20,10 +20,12 @@ export MIOPEN_FIND_ENFORCE=3
 # HIP Memory Allocator Tuning for Unified APU Architecture
 export PYTORCH_HIP_ALLOC_CONF=expandable_segments:True,garbage_collection_threshold:0.8
 
+# HuggingFace Centralized Model Storage Configuration
+export HF_HOME="/home/jason/models/HF-Hub"
+export HF_HUB_CACHE="/home/jason/models/HF-Hub/models"
+
 if [ -d "$DIR/venv" ]; then
     source "$DIR/venv/bin/activate"
 fi
-
-export PYTHONUNBUFFERED=1
 
 python -u web_studio/studio_server.py 2>&1 | tee -a studio.log

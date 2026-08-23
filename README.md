@@ -27,7 +27,12 @@ Tailored for **AMD Ryzen AI 9 HX 370 APU / Radeon 890M (`gfx1150`)** with **51.5
 
 ### 🧠 5. Dynamic Model Lifecycle Caching (Smart VRAM Strategy)
 * **Least Recently Used (LRU) Model Eviction**: Active models (FLUX.1 GGUF, Klein, Juggernaut XL, MiniMax Audio) remain **100% resident in VRAM** during consecutive runs, guaranteeing instant zero-reload generations.
-* **Context-Aware Dynamic Swapping**: Automatically evicts inactive model weights when switching creation contexts (e.g., Image Studio $\leftrightarrow$ Music Studio or switching checkpoint families), preventing PyTorch allocation pool fragmentation and OOM errors.
+* **Context-Aware Dynamic Swapping**: Automatically evicts inactive model weights when switching creation contexts (e.g., Image Studio ↔ Music Studio or switching checkpoint families), preventing PyTorch allocation pool fragmentation and OOM errors.
+* **Segment Expansion**: PyTorch ROCm allocation pools dynamically expand to accommodate high-resolution VAE decodes seamlessly.
+
+### 📁 6. Centralized Model Repository & HuggingFace Storage
+* **Centralized Location**: `HF_HOME="/home/jason/models/HF-Hub"` and `HF_HUB_CACHE="/home/jason/models/HF-Hub/models"`.
+* **Universal Model Scanning**: All downloaded checkpoints, LoRAs, text encoders, and GGUFs are automatically stored and scanned from the central `/home/jason/models/` directory structure.
 * **Segment Expansion**: PyTorch ROCm allocation pools dynamically expand to accommodate high-resolution VAE decodes seamlessly.
 
 ---
