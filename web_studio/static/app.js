@@ -1062,13 +1062,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLightboxItem = null;
 
     async function loadGallery() {
-        if (!galleryGrid) return;
+        const grid = document.getElementById('gallery-grid');
+        if (!grid) return;
         try {
             const res = await fetch('/api/gallery');
             const data = await res.json();
             if (data.status === 'success' && data.images) {
                 if (data.images.length === 0) {
-                    galleryGrid.innerHTML = `
+                    grid.innerHTML = `
                         <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
                             <i class="fa-solid fa-images" style="font-size: 32px; margin-bottom: 12px; display: block; opacity: 0.5;"></i>
                             <p>No generated images found yet. Start generating in the AI Image Studio!</p>
@@ -1077,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                galleryGrid.innerHTML = data.images.map(img => {
+                grid.innerHTML = data.images.map(img => {
                     const timeStr = img.mtime_str ? (img.mtime_str.split(' ')[1] || img.mtime_str) : '';
                     return `
                     <div class="gallery-card" style="background: rgba(30,30,40,0.7); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s;">
