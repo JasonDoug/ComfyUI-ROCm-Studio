@@ -197,17 +197,24 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('seed-input').value = Math.floor(Math.random() * 1000000000);
     });
 
-    // Fetch Available Models
-    async function loadModels() {
+    // Fetch Available Models with Automatic Retry
+    async function loadModels(retries = 5) {
         try {
             const res = await fetch('/api/models');
             const data = await res.json();
             
-            // Checkpoint Select
             const ckptSelect = document.getElementById('ckpt-select');
-            ckptSelect.innerHTML = '';
+            if (!ckptSelect) return;
             
-            const availableCkpts = data.comfy_checkpoints.length > 0 ? data.comfy_checkpoints : data.checkpoints;
+            const availableCkpts = (data.comfy_checkpoints && data.comfy_checkpoints.length > 0) ? data.comfy_checkpoints : (data.checkpoints || []);
+            
+            if (availableCkpts.length === 0 && retries > 0) {
+                console.log("[Studio UI] Models API returned empty, retrying in 1.5s...");
+                setTimeout(() => loadModels(retries - 1), 1500);
+                return;
+            }
+
+            ckptSelect.innerHTML = '';
             availableCkpts.forEach(ckpt => {
                 const opt = document.createElement('option');
                 opt.value = ckpt;
@@ -217,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 ckptSelect.appendChild(opt);
             });
-            // Fallback if not selected yet
+
             if (!ckptSelect.value && ckptSelect.options.length > 0) {
                 ckptSelect.selectedIndex = 0;
             }
@@ -253,43 +260,73 @@ document.addEventListener('DOMContentLoaded', () => {
             const triggerBadges = document.getElementById('trigger-badges');
             const promptInput = document.getElementById('prompt-input');
 
-            loraSelect.innerHTML = '<option value="None">None (Disabled)</option>';
-            data.loras.forEach(lora => {
-                const opt = document.createElement('option');
-                opt.value = lora;
-                opt.textContent = lora;
-                loraSelect.appendChild(opt);
-            });
+            if (loraSelect) {
+                loraSelect.innerHTML = '<option value="None">None (Disabled)</option>';
+                (data.loras || []).forEach(lora => {
+                    const opt = document.createElement('option');
+                    opt.value = lora;
+                    opt.textContent = lora;
+                    loraSelect.appendChild(opt);
+                });
 
-            function updateTriggerBadges() {
-                const selectedLora = loraSelect.value;
-                triggerBadges.innerHTML = '';
-                if (selectedLora && selectedLora !== 'None' && loraTriggersMap[selectedLora]) {
-                    triggersContainer.classList.remove('hidden');
-                    const tags = loraTriggersMap[selectedLora];
-                    tags.forEach(tag => {
-                        const chip = document.createElement('span');
-                        chip.className = 'trigger-chip';
-                        chip.innerHTML = `<i class="fa-solid fa-plus"></i> ${tag}`;
-                        chip.title = "Click to add to prompt";
-                        chip.addEventListener('click', () => {
-                            if (!promptInput.value.includes(tag)) {
-                                promptInput.value += (promptInput.value.trim() ? ', ' : '') + tag;
-                            }
+                function updateTriggerBadges() {
+                    if (!triggersContainer || !triggerBadges) return;
+                    const selectedLora = loraSelect.value;
+                    const tags = loraTriggersMap[selectedLora] || [];
+                    triggerBadges.innerHTML = '';
+                    if (tags.length > 0) {
+                        triggersContainer.classList.remove('hidden');
+                        tags.forEach(tag => {
+                            const chip = document.createElement('span');
+                            chip.className = 'trigger-chip';
+                            chip.innerHTML = `<i class="fa-solid fa-plus"></i> ${tag}`;
+                            chip.title = "Click to add to prompt";
+                            chip.addEventListener('click', () => {
+                                if (!promptInput.value.includes(tag)) {
+                                    promptInput.value += (promptInput.value.trim() ? ', ' : '') + tag;
+                                }
+                            });
+                            triggerBadges.appendChild(chip);
                         });
-                        triggerBadges.appendChild(chip);
-                    });
-                } else {
-                    triggersContainer.classList.add('hidden');
+                    } else {
+                        triggersContainer.classList.add('hidden');
+                    }
                 }
-            }
 
-            loraSelect.addEventListener('change', updateTriggerBadges);
+                loraSelect.addEventListener('change', updateTriggerBadges);
+            }
         } catch (e) {
             console.error("Failed to load models:", e);
+            if (retries > 0) {
+                setTimeout(() => loadModels(retries - 1), 2000);
+            }
         }
     }
     loadModels();
+
+    // Inference Engine Radio UI Sync
+    const engineRadios = document.querySelectorAll('input[name="inference-engine"]');
+    const modelSelectContainer = document.getElementById('model-select-container');
+    const ckptSelect = document.getElementById('ckpt-select');
+
+    function syncEngineUI() {
+        const selected = document.querySelector('input[name="inference-engine"]:checked')?.value || 'local';
+        if (selected === 'zerogpu') {
+            if (ckptSelect) ckptSelect.disabled = true;
+            if (modelSelectContainer) {
+                modelSelectContainer.style.opacity = '0.5';
+                modelSelectContainer.title = "HF ZeroGPU Cloud executes remotely via serverless FLUX.1-dev H100";
+            }
+        } else {
+            if (ckptSelect) ckptSelect.disabled = false;
+            if (modelSelectContainer) {
+                modelSelectContainer.style.opacity = '1.0';
+                modelSelectContainer.title = "";
+            }
+        }
+    }
+    engineRadios.forEach(r => r.addEventListener('change', syncEngineUI));
+    syncEngineUI();
 
     // WebSocket Connection to ComfyUI
     const clientId = 'studio-' + Math.random().toString(36).substring(2, 9);
