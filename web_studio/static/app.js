@@ -1051,7 +1051,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Gallery Tab & Lightbox Logic
-    const galleryGrid = document.getElementById('gallery-grid');
     const refreshGalleryBtn = document.getElementById('refresh-gallery-btn');
     const lightboxModal = document.getElementById('lightbox-modal');
     const lightboxImg = document.getElementById('lightbox-img');
@@ -1061,12 +1060,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeLightboxBtn = document.getElementById('close-lightbox-btn');
     let currentLightboxItem = null;
 
-    async function loadGallery() {
+    window.loadGallery = async function loadGallery() {
         const grid = document.getElementById('gallery-grid');
         if (!grid) return;
         try {
+            console.log("[Studio UI] Fetching gallery images from /api/gallery...");
             const res = await fetch('/api/gallery');
             const data = await res.json();
+            console.log("[Studio UI] Gallery API returned:", data);
             if (data.status === 'success' && data.images) {
                 if (data.images.length === 0) {
                     grid.innerHTML = `
@@ -1104,57 +1105,57 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error("Gallery fetch error:", e);
+            grid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 30px; color: #f87171;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size: 28px; margin-bottom: 8px; display: block;"></i>
+                    <p>Failed to load gallery images: ${e.message}</p>
+                    <button onclick="window.loadGallery()" class="btn btn-secondary" style="margin-top: 10px; font-size: 12px;">Retry Load</button>
+                </div>
+            `;
         }
-    }
+    };
 
     if (refreshGalleryBtn) {
-        refreshGalleryBtn.addEventListener('click', loadGallery);
+        refreshGalleryBtn.addEventListener('click', window.loadGallery);
     }
 
-    // Auto-load gallery on page init & when switching to gallery tab
-    loadGallery();
-    navButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (btn.getAttribute('data-tab') === 'tab-gallery') {
-                loadGallery();
-            }
-        });
-    });
+    // Auto-load gallery on page init
+    window.loadGallery();
 
-    // Lightbox & Card click delegation
-    if (galleryGrid) {
-        galleryGrid.addEventListener('click', async (e) => {
-            const imgContainer = e.target.closest('.gallery-img-container');
-            if (imgContainer) {
-                const url = imgContainer.getAttribute('data-url');
-                const filename = imgContainer.getAttribute('data-filename');
-                const subfolder = imgContainer.getAttribute('data-subfolder');
-                currentLightboxItem = { filename, subfolder, url };
-                lightboxImg.src = url;
-                lightboxFilename.textContent = filename;
+    // Document-level Lightbox & Card click delegation
+    document.addEventListener('click', async (e) => {
+        const imgContainer = e.target.closest('.gallery-img-container');
+        if (imgContainer) {
+            const url = imgContainer.getAttribute('data-url');
+            const filename = imgContainer.getAttribute('data-filename');
+            const subfolder = imgContainer.getAttribute('data-subfolder');
+            currentLightboxItem = { filename, subfolder, url };
+            if (lightboxImg) lightboxImg.src = url;
+            if (lightboxFilename) lightboxFilename.textContent = filename;
+            if (lightboxDownloadBtn) {
                 lightboxDownloadBtn.href = url;
                 lightboxDownloadBtn.download = filename;
-                lightboxModal.classList.remove('hidden');
             }
+            if (lightboxModal) lightboxModal.classList.remove('hidden');
+        }
 
-            const deleteBtn = e.target.closest('.delete-img-btn');
-            if (deleteBtn) {
-                const filename = deleteBtn.getAttribute('data-filename');
-                const subfolder = deleteBtn.getAttribute('data-subfolder');
-                if (confirm(`Delete ${filename}?`)) {
-                    try {
-                        const res = await fetch(`/api/gallery/delete?filename=${encodeURIComponent(filename)}&subfolder=${encodeURIComponent(subfolder)}`, { method: 'DELETE' });
-                        const data = await res.json();
-                        if (data.status === 'success') {
-                            loadGallery();
-                        }
-                    } catch (err) {
-                        alert("Failed to delete image: " + err.message);
+        const deleteBtn = e.target.closest('.delete-img-btn');
+        if (deleteBtn) {
+            const filename = deleteBtn.getAttribute('data-filename');
+            const subfolder = deleteBtn.getAttribute('data-subfolder');
+            if (confirm(`Delete ${filename}?`)) {
+                try {
+                    const res = await fetch(`/api/gallery/delete?filename=${encodeURIComponent(filename)}&subfolder=${encodeURIComponent(subfolder)}`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        window.loadGallery();
                     }
+                } catch (err) {
+                    alert("Failed to delete image: " + err.message);
                 }
             }
-        });
-    }
+        }
+    });
 
     if (closeLightboxBtn && lightboxModal) {
         closeLightboxBtn.addEventListener('click', () => {
@@ -1170,8 +1171,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const res = await fetch(`/api/gallery/delete?filename=${encodeURIComponent(currentLightboxItem.filename)}&subfolder=${encodeURIComponent(currentLightboxItem.subfolder)}`, { method: 'DELETE' });
                     const data = await res.json();
                     if (data.status === 'success') {
-                        lightboxModal.classList.add('hidden');
-                        loadGallery();
+                        if (lightboxModal) lightboxModal.classList.add('hidden');
+                        window.loadGallery();
                     }
                 } catch (err) {
                     alert("Failed to delete image: " + err.message);
@@ -1181,7 +1182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Trigger gallery refresh whenever generation completes
-    window.refreshGalleryAfterGen = loadGallery;
+    window.refreshGalleryAfterGen = window.loadGallery;
 
     // Start live inline log polling immediately and every 2 seconds
     pollInlineLogs();
