@@ -14,6 +14,7 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 MODELS_DIR = "/home/jason/models"
+COMFY_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COMFY_URL = "http://127.0.0.1:8188"
 COMFY_WS_URL = "ws://127.0.0.1:8188/ws"
 
@@ -113,11 +114,38 @@ def get_models():
             comfy_checkpoints.remove(m)
     comfy_checkpoints = top_models + comfy_checkpoints
 
+    # Fetch live ComfyUI LoraLoader list for direct compatibility
+    comfy_loras = []
+    try:
+        req_l = urllib.request.urlopen(f"{COMFY_URL}/object_info/LoraLoader", timeout=2)
+        data_l = json.loads(req_l.read().decode('utf-8'))
+        comfy_loras = data_l.get("LoraLoader", {}).get("input", {}).get("required", {}).get("lora_name", [[]])[0]
+        comfy_loras = list(dict.fromkeys(comfy_loras))
+    except Exception:
+        comfy_loras = loras
+
+    # Combine scanned LoRAs and ComfyUI LoRAs
+    all_loras = comfy_loras + [l for l in loras if l not in comfy_loras]
+    
+    # Sort top LoRAs with Classic Painting FLUX at top
+    top_loras = []
+    for l in ['Classic_Painting_Flux_v1_renderartist.safetensors', 'Lora/Classic_Painting_Flux_v1_renderartist.safetensors', 'loras/Classic_Painting_Flux_v1_renderartist.safetensors']:
+        if l in all_loras:
+            top_loras.append(l)
+            all_loras.remove(l)
+    all_loras = top_loras + all_loras
+
     lora_triggers = {}
     loras_dir = os.path.join(MODELS_DIR, "LoRAs")
-    for l in loras:
-        full_p = os.path.join(loras_dir, l)
-        tags = extract_lora_triggers(full_p)
+    comfy_loras_dir = os.path.join(COMFY_DIR, "models", "loras")
+    
+    for l in all_loras:
+        full_p1 = os.path.join(loras_dir, l)
+        full_p2 = os.path.join(comfy_loras_dir, l)
+        full_p3 = os.path.join(comfy_loras_dir, os.path.basename(l))
+        target_path = full_p1 if os.path.exists(full_p1) else (full_p2 if os.path.exists(full_p2) else full_p3)
+        
+        tags = extract_lora_triggers(target_path)
         if tags:
             lora_triggers[l] = tags
             lora_triggers[os.path.basename(l)] = tags
@@ -126,7 +154,7 @@ def get_models():
         "checkpoints": checkpoints,
         "comfy_checkpoints": comfy_checkpoints,
         "diffusion_models": diffusions,
-        "loras": loras,
+        "loras": all_loras,
         "lora_triggers": lora_triggers,
         "vaes": vaes,
         "upscalers": upscalers,
