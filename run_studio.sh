@@ -5,6 +5,8 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "$DIR"
 
+export LD_PRELOAD=/opt/rocm/core-7.14/lib/libhsa-runtime64.so.1
+
 if [ -d "$DIR/venv" ]; then
     source "$DIR/venv/bin/activate"
 fi
