@@ -26,18 +26,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Genre Preset Buttons
-    const genreButtons = document.querySelectorAll('.genre-btn');
-    genreButtons.forEach(btn => {
+    // Image Preset Buttons (Tab 1)
+    const imagePresetButtons = document.querySelectorAll('.image-btn');
+    imagePresetButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const presetPrompt = btn.getAttribute('data-prompt');
+            if (presetPrompt && promptInput) {
+                promptInput.value = presetPrompt;
+            }
+        });
+    });
+
+    // Music Preset Buttons (Tab 3)
+    const musicPresetButtons = document.querySelectorAll('.music-btn');
+    musicPresetButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const presetPrompt = btn.getAttribute('data-prompt');
             if (presetPrompt) {
-                if (btn.classList.contains('music-btn')) {
-                    document.getElementById('minimax-style-prompt').value = presetPrompt;
-                    document.getElementById('tts-text-input').value = presetPrompt;
-                } else {
-                    promptInput.value = presetPrompt;
-                }
+                const styleInput = document.getElementById('minimax-style-prompt');
+                const ttsInput = document.getElementById('tts-text-input');
+                const simpleInput = document.getElementById('minimax-simple-prompt');
+                const conceptInput = document.getElementById('minimax-concept-input');
+                if (styleInput) styleInput.value = presetPrompt;
+                if (ttsInput) ttsInput.value = presetPrompt;
+                if (simpleInput) simpleInput.value = presetPrompt;
+                if (conceptInput) conceptInput.value = presetPrompt;
             }
         });
     });
