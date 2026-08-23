@@ -184,6 +184,20 @@
                             <div class="progress-text" id="progress-text" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); pointer-events: none;">0% • Ready</div>
                         </div>
 
+                        <!-- Live System & Backend Output Console Box -->
+                        <div class="live-console-box" style="margin-bottom: 16px; border: 1px solid #1e2230; border-radius: 8px; background: #0b0c10; padding: 10px; font-family: 'Consolas', 'Courier New', monospace;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px solid #1a1d29; padding-bottom: 4px;">
+                                <span style="font-size: 11px; font-weight: 600; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-terminal" style="color: #6366f1;"></i> Live System Log & Backend Output
+                                </span>
+                                <div style="display: flex; gap: 6px;">
+                                    <button class="toggle-log-src-btn" style="background: #1a1e2b; border: 1px solid #333; color: #ccc; font-size: 10px; padding: 2px 8px; border-radius: 4px; cursor: pointer;">Target: comfyui.log</button>
+                                    <button class="refresh-inline-log-btn" style="background: #1a1e2b; border: 1px solid #333; color: #ccc; font-size: 10px; padding: 2px 8px; border-radius: 4px; cursor: pointer;"><i class="fa-solid fa-rotate-right"></i></button>
+                                </div>
+                            </div>
+                            <pre class="inline-log-output" style="margin: 0; height: 110px; overflow-y: auto; font-size: 11.5px; color: #00ff88; line-height: 1.4; white-space: pre-wrap; word-break: break-all;">Initializing live backend log stream...</pre>
+                        </div>
+
                         <div class="canvas-area" id="canvas-area">
                             <div class="placeholder-text">
                                 <i class="fa-solid fa-wand-magic"></i>

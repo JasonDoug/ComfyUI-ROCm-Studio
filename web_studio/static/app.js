@@ -909,4 +909,46 @@ document.addEventListener('DOMContentLoaded', () => {
     if (refreshLogsBtn) {
         refreshLogsBtn.addEventListener('click', fetchBackendLogs);
     }
+
+    // Inline Live Console Box Poller
+    let inlineLogTarget = 'comfyui';
+    const inlineOutputs = document.querySelectorAll('.inline-log-output');
+    const toggleBtns = document.querySelectorAll('.toggle-log-src-btn');
+    const refreshBtns = document.querySelectorAll('.refresh-inline-log-btn');
+
+    async function pollInlineLogs() {
+        if (!inlineOutputs.length) return;
+        try {
+            const res = await fetch(`/api/logs/${inlineLogTarget}?lines=35`);
+            const data = await res.json();
+            if (data.status === 'success' && data.lines) {
+                const text = data.lines.join('\n') || '[No recent log entries]';
+                inlineOutputs.forEach(box => {
+                    const isAtBottom = box.scrollHeight - box.clientHeight <= box.scrollTop + 30;
+                    box.textContent = text;
+                    if (isAtBottom) {
+                        box.scrollTop = box.scrollHeight;
+                    }
+                });
+            }
+        } catch (e) {
+            // silent retry
+        }
+    }
+
+    toggleBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            inlineLogTarget = (inlineLogTarget === 'comfyui') ? 'studio' : 'comfyui';
+            toggleBtns.forEach(b => b.textContent = `Target: ${inlineLogTarget}.log`);
+            pollInlineLogs();
+        });
+    });
+
+    refreshBtns.forEach(btn => {
+        btn.addEventListener('click', pollInlineLogs);
+    });
+
+    // Start live inline log polling every 2 seconds
+    pollInlineLogs();
+    setInterval(pollInlineLogs, 2000);
 });
