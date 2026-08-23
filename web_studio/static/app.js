@@ -1067,12 +1067,14 @@ function initStudioApp() {
     const closeLightboxBtn = document.getElementById('close-lightbox-btn');
     let currentLightboxItem = null;
 
+    let isGalleryLoading = false;
     window.loadGallery = async function loadGallery() {
         const grid = document.getElementById('gallery-grid');
-        if (!grid) return;
+        if (!grid || isGalleryLoading) return;
+        isGalleryLoading = true;
         try {
             console.log("[Studio UI] Fetching gallery images from /api/gallery...");
-            const res = await fetch('/api/gallery');
+            const res = await fetch('/api/gallery?t=' + Date.now());
             const data = await res.json();
             console.log("[Studio UI] Gallery API returned:", data);
             if (data.status === 'success' && data.images) {
@@ -1119,6 +1121,8 @@ function initStudioApp() {
                     <button onclick="window.loadGallery()" class="btn btn-secondary" style="margin-top: 10px; font-size: 12px;">Retry Load</button>
                 </div>
             `;
+        } finally {
+            isGalleryLoading = false;
         }
     };
 
