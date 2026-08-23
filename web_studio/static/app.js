@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+function initStudioApp() {
     // Navigation Tabs
     const navButtons = document.querySelectorAll('.nav-btn');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.add('active');
             const targetEl = document.getElementById(targetTab);
             if (targetEl) targetEl.classList.add('active');
-            if (targetTab === 'tab-gallery' && typeof loadGallery === 'function') {
-                loadGallery();
+            if (targetTab === 'tab-gallery' && typeof window.loadGallery === 'function') {
+                window.loadGallery();
             }
         });
     });
@@ -1187,4 +1187,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Start live inline log polling immediately and every 2 seconds
     pollInlineLogs();
     setInterval(pollInlineLogs, 2000);
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initStudioApp);
+} else {
+    initStudioApp();
+}
