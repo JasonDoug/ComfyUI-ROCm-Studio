@@ -651,20 +651,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1500);
     }
 
-    // Add to Gallery
-    const galleryGrid = document.getElementById('gallery-grid');
+    // Add to Gallery Helper (uses main loadGallery)
     function addToGallery(url) {
-        const emptyMsg = galleryGrid.querySelector('.empty-gallery');
-        if (emptyMsg) emptyMsg.remove();
-
-        const img = document.createElement('img');
-        img.src = url;
-        img.className = 'gallery-item';
-        img.addEventListener('click', () => {
-            resultImg.src = url;
-            downloadLink.href = url;
-        });
-        galleryGrid.prepend(img);
+        if (typeof loadGallery === 'function') {
+            loadGallery();
+        }
     }
 
     // Vision-to-Prompt Handlers
