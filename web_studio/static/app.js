@@ -1089,9 +1089,9 @@ function initStudioApp() {
                 grid.innerHTML = data.images.map(img => {
                     const timeStr = img.mtime_str ? (img.mtime_str.split(' ')[1] || img.mtime_str) : '';
                     return `
-                    <div class="gallery-card" style="background: rgba(30,30,40,0.7); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s;">
-                        <div style="aspect-ratio: 1; overflow: hidden; background: #000; cursor: pointer; position: relative;" class="gallery-img-container" data-url="${img.url}" data-filename="${img.filename}" data-subfolder="${img.subfolder}">
-                            <img src="${img.url}" alt="${img.filename}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <div class="gallery-card" style="background: rgba(30,30,40,0.7); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; width: 100%; transition: transform 0.2s, border-color 0.2s;">
+                        <div style="width: 100%; height: 260px; overflow: hidden; background: #111; cursor: pointer; position: relative;" class="gallery-img-container" data-url="${img.url}" data-filename="${img.filename}" data-subfolder="${img.subfolder}">
+                            <img src="${img.url}" alt="${img.filename}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         </div>
                         <div style="padding: 10px 12px; font-size: 11px; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid rgba(255,255,255,0.05);">
                             <div style="font-weight: 600; color: #e2e8f0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${img.filename}">
