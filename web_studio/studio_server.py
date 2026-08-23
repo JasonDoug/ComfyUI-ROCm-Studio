@@ -197,10 +197,14 @@ async def generate_image(payload: dict):
     negative_prompt = payload.get("negative_prompt", "")
     seed = int(payload.get("seed", 42))
 
-    # Schnell, Klein, and Flux models require CFG 1.0, simple/sgm_uniform scheduler, and empty negative prompt
+    # Schnell and Klein require 4-8 steps; FLUX.1-dev requires 20-25 steps
+    is_dev = "dev" in ckpt_name.lower()
     is_flux = ("schnell" in ckpt_name.lower() or "klein" in ckpt_name.lower() or "flux" in ckpt_name.lower() or ckpt_name.endswith(".gguf"))
     if is_flux:
-        steps = 4 if steps > 8 or steps == 25 else steps
+        if is_dev:
+            steps = steps if steps >= 15 else 20
+        else:
+            steps = 4 if (steps > 8 or steps == 25) else steps
         cfg = 1.0
         if scheduler == "normal":
             scheduler = "simple"

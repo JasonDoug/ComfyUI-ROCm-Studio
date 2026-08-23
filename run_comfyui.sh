@@ -28,8 +28,9 @@ fi
 
 export PYTHONUNBUFFERED=1
 
-# Launch ComfyUI with PyTorch SDPA cross-attention and APU memory flags
+# Launch ComfyUI with PyTorch SDPA cross-attention, async offload streams, and APU memory flags
 python -u main.py \
     --use-pytorch-cross-attention \
     --disable-pinned-memory \
+    --async-offload 2 \
     "$@" 2>&1 | tee -a comfyui.log
