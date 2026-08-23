@@ -857,7 +857,10 @@ def get_gallery():
                     except Exception:
                         pass
     images.sort(key=lambda x: x["mtime"], reverse=True)
-    return JSONResponse({"status": "success", "total": len(images), "images": images})
+    return JSONResponse(
+        content={"status": "success", "total": len(images), "images": images},
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"}
+    )
 
 @app.delete("/api/gallery/delete")
 def delete_gallery_image(filename: str, subfolder: str = ""):
@@ -963,9 +966,20 @@ async def generate_zerogpu(payload: dict):
             raise HTTPException(status_code=500, detail=f"ZeroGPU Space Execution Failed: {str(e)} | Fallback: {str(pub_e)}")
 
 
-# Serve Static UI
+# Serve Static UI with Strict No-Cache Headers
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(STATIC_DIR, exist_ok=True)
+
+@app.get("/")
+def serve_index():
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    return FileResponse(index_path, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
+
+@app.get("/app.js")
+def serve_app_js():
+    js_path = os.path.join(STATIC_DIR, "app.js")
+    return FileResponse(js_path, media_type="application/javascript", headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
+
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
 
 if __name__ == "__main__":
