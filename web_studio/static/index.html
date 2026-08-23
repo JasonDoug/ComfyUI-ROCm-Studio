@@ -25,6 +25,9 @@
                 <button class="nav-btn" data-tab="tab-audio">
                     <i class="fa-solid fa-microphone"></i> Audio & Speech
                 </button>
+                <button class="nav-btn" data-tab="tab-gallery">
+                    <i class="fa-solid fa-images"></i> Image Gallery
+                </button>
                 <button class="nav-btn" data-tab="tab-roadmap">
                     <i class="fa-solid fa-map-location-dot"></i> Model Roadmap
                 </button>
@@ -417,7 +420,27 @@
                 </div>
             </section>
 
-            <!-- TAB 4: Model Roadmap -->
+            <!-- TAB 4: Image Gallery -->
+            <section id="tab-gallery" class="tab-content">
+                <header class="header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h1><i class="fa-solid fa-images" style="color: var(--accent-primary);"></i> AI Image Gallery</h1>
+                        <p>All generated character cards, historical scenes, and artistic assets</p>
+                    </div>
+                    <button id="refresh-gallery-btn" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">
+                        <i class="fa-solid fa-arrows-rotate"></i> Refresh Gallery
+                    </button>
+                </header>
+
+                <div id="gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 20px;">
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 8px;"></i>
+                        <p>Loading generated gallery images...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: Model Roadmap -->
             <section id="tab-roadmap" class="tab-content">
                 <header class="header">
                     <h1>Model Download & Integration Roadmap</h1>
@@ -451,6 +474,20 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Lightbox Image Modal -->
+    <div id="lightbox-modal" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px;">
+        <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;">
+            <button id="close-lightbox-btn" style="position: absolute; top: -40px; right: 0; background: none; border: none; color: #fff; font-size: 32px; cursor: pointer;">&times;</button>
+            <img id="lightbox-img" src="" style="max-width: 90vw; max-height: 80vh; border-radius: 8px; border: 1px solid #444; object-fit: contain;">
+            <div style="margin-top: 12px; display: flex; gap: 12px; align-items: center; background: rgba(15,23,42,0.9); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color);">
+                <span id="lightbox-filename" style="color: #fff; font-size: 13px; font-weight: 500;"></span>
+                <a id="lightbox-download-btn" class="btn btn-secondary" href="#" download style="padding: 4px 12px; font-size: 12px;"><i class="fa-solid fa-download"></i> Download</a>
+                <button id="lightbox-delete-btn" class="btn btn-secondary" style="padding: 4px 12px; font-size: 12px; background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.5); color: #f87171;"><i class="fa-solid fa-trash"></i> Delete</button>
+            </div>
+        </div>
+    </div>
     <!-- System Logs Modal -->
     <div id="logs-modal" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 9999;">
         <div class="modal-box" style="background: #1e1e24; border: 1px solid #333; border-radius: 12px; padding: 20px; width: 850px; max-width: 92vw; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">

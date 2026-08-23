@@ -20,6 +20,8 @@ COMFY_WS_URL = "ws://127.0.0.1:8188/ws"
 
 app = FastAPI(title="ComfyUI Studio API", version="1.0.0")
 
+OUTPUT_DIR = "/home/jason/AI-ImageGen/ComfyUI/output"
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -828,6 +830,47 @@ def get_history():
     except Exception as e:
         return JSONResponse({})
 
+@app.get("/api/gallery")
+def get_gallery():
+    """Lists all generated images from output directory with metadata, sorted newest first."""
+    import urllib.parse
+    from datetime import datetime
+    images = []
+    output_dir = OUTPUT_DIR
+    if os.path.exists(output_dir):
+        for root, _, files in os.walk(output_dir):
+            for file in files:
+                if file.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
+                    full_path = os.path.join(root, file)
+                    rel_path = os.path.relpath(full_path, output_dir)
+                    subfolder = os.path.dirname(rel_path)
+                    try:
+                        stat = os.stat(full_path)
+                        images.append({
+                            "filename": file,
+                            "subfolder": subfolder,
+                            "size_mb": round(stat.st_size / (1024 * 1024), 2),
+                            "mtime": stat.st_mtime,
+                            "mtime_str": datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S'),
+                            "url": f"/api/image?filename={urllib.parse.quote(file)}&subfolder={urllib.parse.quote(subfolder)}&type=output"
+                        })
+                    except Exception:
+                        pass
+    images.sort(key=lambda x: x["mtime"], reverse=True)
+    return JSONResponse({"status": "success", "total": len(images), "images": images})
+
+@app.delete("/api/gallery/delete")
+def delete_gallery_image(filename: str, subfolder: str = ""):
+    """Deletes an image file from the output directory."""
+    target_path = os.path.join(OUTPUT_DIR, subfolder, filename)
+    if os.path.exists(target_path) and os.path.isfile(target_path):
+        try:
+            os.remove(target_path)
+            return JSONResponse({"status": "success", "message": f"Deleted {filename}"})
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to delete file: {str(e)}")
+    raise HTTPException(status_code=404, detail="File not found")
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, clientId: str = ""):
     await websocket.accept()
@@ -883,7 +926,7 @@ async def generate_zerogpu(payload: dict):
         temp_img_path = res[0] if isinstance(res, (tuple, list)) else res
         
         output_filename = f"Studio_Gen_ZeroGPU_RomanSim_{clean_slug(prompt[:20])}_{int(time.time())}.png"
-        output_path = os.path.join(COMFY_OUTPUT_DIR, output_filename)
+        output_path = os.path.join(OUTPUT_DIR, output_filename)
         shutil.copy(temp_img_path, output_path)
         
         return JSONResponse({
@@ -907,7 +950,7 @@ async def generate_zerogpu(payload: dict):
             )
             temp_img_path = pub_res[0] if isinstance(pub_res, (tuple, list)) else pub_res
             output_filename = f"Studio_Gen_ZeroGPU_Public_{clean_slug(prompt[:20])}_{int(time.time())}.png"
-            output_path = os.path.join(COMFY_OUTPUT_DIR, output_filename)
+            output_path = os.path.join(OUTPUT_DIR, output_filename)
             shutil.copy(temp_img_path, output_path)
             return JSONResponse({
                 "status": "success",

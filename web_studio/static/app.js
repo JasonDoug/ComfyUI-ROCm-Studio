@@ -1018,6 +1018,134 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Gallery Tab & Lightbox Logic
+    const galleryGrid = document.getElementById('gallery-grid');
+    const refreshGalleryBtn = document.getElementById('refresh-gallery-btn');
+    const lightboxModal = document.getElementById('lightbox-modal');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxFilename = document.getElementById('lightbox-filename');
+    const lightboxDownloadBtn = document.getElementById('lightbox-download-btn');
+    const lightboxDeleteBtn = document.getElementById('lightbox-delete-btn');
+    const closeLightboxBtn = document.getElementById('close-lightbox-btn');
+    let currentLightboxItem = null;
+
+    async function loadGallery() {
+        if (!galleryGrid) return;
+        try {
+            const res = await fetch('/api/gallery');
+            const data = await res.json();
+            if (data.status === 'success' && data.images) {
+                if (data.images.length === 0) {
+                    galleryGrid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
+                            <i class="fa-solid fa-images" style="font-size: 32px; margin-bottom: 12px; display: block; opacity: 0.5;"></i>
+                            <p>No generated images found yet. Start generating in the AI Image Studio!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                galleryGrid.innerHTML = data.images.map(img => `
+                    <div class="gallery-card" style="background: rgba(30,30,40,0.7); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s;">
+                        <div style="aspect-ratio: 1; overflow: hidden; background: #000; cursor: pointer; position: relative;" class="gallery-img-container" data-url="${img.url}" data-filename="${img.filename}" data-subfolder="${img.subfolder}">
+                            <img src="${img.url}" alt="${img.filename}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        </div>
+                        <div style="padding: 10px 12px; font-size: 11px; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <div style="font-weight: 600; color: #e2e8f0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${img.filename}">
+                                ${img.filename}
+                            </div>
+                            <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
+                                <span><i class="fa-regular fa-clock"></i> ${img.mtime_str.split(' ')[1]}</span>
+                                <span><i class="fa-solid fa-hard-drive"></i> ${img.size_mb} MB</span>
+                            </div>
+                            <div style="display: flex; gap: 6px; margin-top: 6px;">
+                                <a href="${img.url}" download="${img.filename}" class="btn btn-secondary" style="flex: 1; padding: 4px; font-size: 11px; text-align: center;"><i class="fa-solid fa-download"></i> Save</a>
+                                <button class="btn btn-secondary delete-img-btn" data-filename="${img.filename}" data-subfolder="${img.subfolder}" style="padding: 4px 8px; font-size: 11px; background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #f87171;"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (e) {
+            console.error("Gallery fetch error:", e);
+        }
+    }
+
+    if (refreshGalleryBtn) {
+        refreshGalleryBtn.addEventListener('click', loadGallery);
+    }
+
+    // Auto-load gallery when switching to gallery tab
+    navBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.getAttribute('data-tab') === 'tab-gallery') {
+                loadGallery();
+            }
+        });
+    });
+
+    // Lightbox & Card click delegation
+    if (galleryGrid) {
+        galleryGrid.addEventListener('click', async (e) => {
+            const imgContainer = e.target.closest('.gallery-img-container');
+            if (imgContainer) {
+                const url = imgContainer.getAttribute('data-url');
+                const filename = imgContainer.getAttribute('data-filename');
+                const subfolder = imgContainer.getAttribute('data-subfolder');
+                currentLightboxItem = { filename, subfolder, url };
+                lightboxImg.src = url;
+                lightboxFilename.textContent = filename;
+                lightboxDownloadBtn.href = url;
+                lightboxDownloadBtn.download = filename;
+                lightboxModal.classList.remove('hidden');
+            }
+
+            const deleteBtn = e.target.closest('.delete-img-btn');
+            if (deleteBtn) {
+                const filename = deleteBtn.getAttribute('data-filename');
+                const subfolder = deleteBtn.getAttribute('data-subfolder');
+                if (confirm(`Delete ${filename}?`)) {
+                    try {
+                        const res = await fetch(`/api/gallery/delete?filename=${encodeURIComponent(filename)}&subfolder=${encodeURIComponent(subfolder)}`, { method: 'DELETE' });
+                        const data = await res.json();
+                        if (data.status === 'success') {
+                            loadGallery();
+                        }
+                    } catch (err) {
+                        alert("Failed to delete image: " + err.message);
+                    }
+                }
+            }
+        });
+    }
+
+    if (closeLightboxBtn && lightboxModal) {
+        closeLightboxBtn.addEventListener('click', () => {
+            lightboxModal.classList.add('hidden');
+        });
+    }
+
+    if (lightboxDeleteBtn) {
+        lightboxDeleteBtn.addEventListener('click', async () => {
+            if (!currentLightboxItem) return;
+            if (confirm(`Delete ${currentLightboxItem.filename}?`)) {
+                try {
+                    const res = await fetch(`/api/gallery/delete?filename=${encodeURIComponent(currentLightboxItem.filename)}&subfolder=${encodeURIComponent(currentLightboxItem.subfolder)}`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        lightboxModal.classList.add('hidden');
+                        loadGallery();
+                    }
+                } catch (err) {
+                    alert("Failed to delete image: " + err.message);
+                }
+            }
+        });
+    }
+
+    // Trigger gallery refresh whenever generation completes
+    window.refreshGalleryAfterGen = loadGallery;
+
     // Start live inline log polling immediately and every 2 seconds
     pollInlineLogs();
     setInterval(pollInlineLogs, 2000);
