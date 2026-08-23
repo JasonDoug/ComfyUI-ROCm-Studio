@@ -1075,8 +1075,9 @@ document.addEventListener('DOMContentLoaded', () => {
         refreshGalleryBtn.addEventListener('click', loadGallery);
     }
 
-    // Auto-load gallery when switching to gallery tab
-    navBtns.forEach(btn => {
+    // Auto-load gallery on page init & when switching to gallery tab
+    loadGallery();
+    navButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             if (btn.getAttribute('data-tab') === 'tab-gallery') {
                 loadGallery();
