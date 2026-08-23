@@ -24,4 +24,6 @@ if [ -d "$DIR/venv" ]; then
     source "$DIR/venv/bin/activate"
 fi
 
-python web_studio/studio_server.py
+export PYTHONUNBUFFERED=1
+
+python -u web_studio/studio_server.py 2>&1 | tee -a studio.log

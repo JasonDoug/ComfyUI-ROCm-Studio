@@ -25,9 +25,11 @@ if [ -d "$DIR/venv" ]; then
     source "$DIR/venv/bin/activate"
 fi
 
+export PYTHONUNBUFFERED=1
+
 # Launch ComfyUI with PyTorch SDPA cross-attention, high VRAM caching, and APU memory flags
-python main.py \
+python -u main.py \
     --use-pytorch-cross-attention \
     --disable-pinned-memory \
     --highvram \
-    "$@"
+    "$@" 2>&1 | tee -a comfyui.log

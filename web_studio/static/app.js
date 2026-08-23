@@ -850,4 +850,63 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // System Logs Modal Controller
+    const openLogsBtn = document.getElementById('open-logs-btn');
+    const closeLogsBtn = document.getElementById('close-logs-btn');
+    const logsModal = document.getElementById('logs-modal');
+    const logTabComfy = document.getElementById('log-tab-comfyui');
+    const logTabStudio = document.getElementById('log-tab-studio');
+    const refreshLogsBtn = document.getElementById('refresh-logs-btn');
+    const logsConsole = document.getElementById('logs-console');
+    let currentLogTarget = 'comfyui';
+
+    async function fetchBackendLogs() {
+        if (!logsConsole) return;
+        logsConsole.textContent = `Fetching ${currentLogTarget}.log...`;
+        try {
+            const res = await fetch(`/api/logs/${currentLogTarget}?lines=150`);
+            const data = await res.json();
+            if (data.status === 'success' && data.lines) {
+                logsConsole.textContent = data.lines.join('\n') || '[Log is empty]';
+                logsConsole.scrollTop = logsConsole.scrollHeight;
+            } else {
+                logsConsole.textContent = data.message || `[No logs available for ${currentLogTarget}]`;
+            }
+        } catch (e) {
+            logsConsole.textContent = `[Failed to connect to log server: ${e.message}]`;
+        }
+    }
+
+    if (openLogsBtn && logsModal) {
+        openLogsBtn.addEventListener('click', () => {
+            logsModal.classList.remove('hidden');
+            fetchBackendLogs();
+        });
+    }
+
+    if (closeLogsBtn && logsModal) {
+        closeLogsBtn.addEventListener('click', () => {
+            logsModal.classList.add('hidden');
+        });
+    }
+
+    if (logTabComfy && logTabStudio) {
+        logTabComfy.addEventListener('click', () => {
+            currentLogTarget = 'comfyui';
+            logTabComfy.classList.add('active');
+            logTabStudio.classList.remove('active');
+            fetchBackendLogs();
+        });
+        logTabStudio.addEventListener('click', () => {
+            currentLogTarget = 'studio';
+            logTabStudio.classList.add('active');
+            logTabComfy.classList.remove('active');
+            fetchBackendLogs();
+        });
+    }
+
+    if (refreshLogsBtn) {
+        refreshLogsBtn.addEventListener('click', fetchBackendLogs);
+    }
 });

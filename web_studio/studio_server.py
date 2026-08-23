@@ -162,6 +162,21 @@ def get_models():
         "llms": llms
     })
 
+@app.get("/api/logs/{target}")
+def get_backend_logs(target: str, lines: int = 100):
+    """Returns the last N lines of comfyui.log or studio.log for live error monitoring."""
+    log_file = "comfyui.log" if target == "comfyui" else "studio.log"
+    file_path = os.path.join(COMFY_DIR, log_file)
+    if not os.path.exists(file_path):
+        return JSONResponse({"status": "error", "message": f"Log file {log_file} not found yet."}, status_code=404)
+    try:
+        with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+            all_lines = f.readlines()
+            tail_lines = all_lines[-lines:] if len(all_lines) > lines else all_lines
+            return JSONResponse({"status": "success", "target": target, "lines": [l.rstrip() for l in tail_lines]})
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+
 @app.post("/api/generate")
 async def generate_image(payload: dict):
     """Constructs ComfyUI graph and submits generation prompt."""

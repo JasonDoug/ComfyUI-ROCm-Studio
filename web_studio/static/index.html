@@ -36,6 +36,9 @@
                     <small>ROCm 7.14 • GFX1150 Native</small>
                 </div>
             </div>
+            <button id="open-logs-btn" class="secondary-btn" style="margin-top: 12px; width: 100%;">
+                <i class="fa-solid fa-terminal"></i> View System Logs
+            </button>
         </aside>
 
         <!-- Main Workspace -->
@@ -417,6 +420,20 @@
                 </div>
             </section>
         </main>
+    <!-- System Logs Modal -->
+    <div id="logs-modal" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <div class="modal-box" style="background: #1e1e24; border: 1px solid #333; border-radius: 12px; padding: 20px; width: 850px; max-width: 92vw; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                <h3 style="margin: 0; color: #fff; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-terminal" style="color: #6366f1;"></i> Live System & Backend Logs</h3>
+                <button id="close-logs-btn" style="background: none; border: none; color: #888; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <div style="margin-bottom: 12px; display: flex; gap: 10px; align-items: center;">
+                <button id="log-tab-comfyui" class="secondary-btn active" style="padding: 6px 14px; font-size: 13px;">ComfyUI Backend (comfyui.log)</button>
+                <button id="log-tab-studio" class="secondary-btn" style="padding: 6px 14px; font-size: 13px;">Studio Server (studio.log)</button>
+                <button id="refresh-logs-btn" class="secondary-btn" style="margin-left: auto; padding: 6px 14px; font-size: 13px;"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+            </div>
+            <pre id="logs-console" style="background: #0d0e12; color: #00ff88; padding: 15px; border-radius: 8px; font-family: 'Consolas', 'Courier New', monospace; font-size: 13px; line-height: 1.5; height: 420px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; border: 1px solid #222; margin: 0;">Loading logs...</pre>
+        </div>
     </div>
 
     <script src="app.js"></script>
