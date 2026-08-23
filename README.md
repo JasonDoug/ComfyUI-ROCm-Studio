@@ -22,9 +22,13 @@ An optimized, full-featured AI Web Studio and execution engine built on **ComfyU
 ### ⚡ 4. AMD ROCm 7.14 Hardware Optimizations
 Tailored for **AMD Ryzen AI 9 HX 370 APU / Radeon 890M (`gfx1150`)** with **51.5 GB LPDDR5X Unified Memory**:
 * **PyTorch 2.13 SDPA AOTriton Fused Cross-Attention**: Direct kernel dispatch for matrix math (`TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1` & `MIOPEN_FIND_ENFORCE=3`).
-* **HIP Memory Allocator Tuning**: Eliminates memory fragmentation with `PYTORCH_HIP_ALLOC_CONF=expandable_segments:True,garbage_collection_threshold:0.8`.
-* **Zero-Offload APU Caching (`--highvram` + `--disable-pinned-memory`)**: Capitalizes on unified DRAM to keep large models (FLUX GGUF, ACE Step 1.5) resident in VRAM without CPU-to-GPU transfer overhead.
+* **PyTorch Segment Expansion**: Eliminates memory fragmentation with `PYTORCH_HIP_ALLOC_CONF` & `PYTORCH_CUDA_ALLOC_CONF` (`expandable_segments:True,garbage_collection_threshold:0.8`).
 * **HSA Hardware SDMA Direct Transfers**: Enables `libhsa-runtime64.so.1` system direct memory access (`HSA_ENABLE_SDMA=1`).
+
+### 🧠 5. Dynamic Model Lifecycle Caching (Smart VRAM Strategy)
+* **Least Recently Used (LRU) Model Eviction**: Active models (FLUX.1 GGUF, Klein, Juggernaut XL, MiniMax Audio) remain **100% resident in VRAM** during consecutive runs, guaranteeing instant zero-reload generations.
+* **Context-Aware Dynamic Swapping**: Automatically evicts inactive model weights when switching creation contexts (e.g., Image Studio $\leftrightarrow$ Music Studio or switching checkpoint families), preventing PyTorch allocation pool fragmentation and OOM errors.
+* **Segment Expansion**: PyTorch ROCm allocation pools dynamically expand to accommodate high-resolution VAE decodes seamlessly.
 
 ---
 
